@@ -25,11 +25,13 @@ void setup(){
   notes[4] = new SoundFile (this,"G.wav");
   notes[5] = new SoundFile (this,"A.wav");
   notes[6] = new SoundFile (this,"B.wav");
+  
+  background(255, 204, 0);
 }
 
 void draw() {
-  background(255, 204, 0);
-  
+    fill(0);
+    ellipse(playPointer*50, playPointer*50, 30, 30);
   //if started
   //play note 1
   //keypressed (left/right) --> play the prev/next note
@@ -55,27 +57,6 @@ void keyPressed(){
   
   notes[option].play();
   
-/*  if(option == 1){
-    noteC.play();
-  }
-  if(option == 2){
-    noteD.play();
-  }
-  if(option == 3){
-    noteE.play();
-  }
-  if(option == 4){
-    noteF.play();
-  }
-  if(option == 5){
-    noteG.play();
-  }
-  if(option == 6){
-    noteA.play();
-  }
-  if(option == 7){
-    noteB.play();
-  }*/
 
 //confirm note selection
   if(keyCode == ENTER){
@@ -84,20 +65,24 @@ void keyPressed(){
       cur++;
   }
 
-if(keyCode == SHIFT){
-  while(playPointer < cur){
-    option = playPointer;
-    notes[melodynotes[playPointer]].play();
-    fill(0);
-    ellipse(playPointer*50, option*50, 30, 30);
-    println(playPointer);
-    try{
-      Thread.sleep(500);
-    } catch (Exception e){
-    }
-    playPointer++;
+  if(keyCode == SHIFT){
+    new Thread(new Runnable(){
+      public void run(){
+        while(playPointer < cur) {
+          notes[melodynotes[playPointer]].play();
+          playPointer++;
+          
+          try{
+            Thread.sleep(500);
+          } catch (Exception e){
+          }
+        }
+
+      }
+    }).start();
+    
+    playPointer = 0;
+   
   }
-  playPointer = 0;
-}
 
 }
