@@ -23,6 +23,12 @@ static final Random delayGenerator = new Random();
 
 Serial port;
 
+//from arduino
+int button;
+
+//define a variable of the motor iondex
+int motor = 5;
+
 boolean nyuMode=true;
 
 void setup(){
@@ -42,8 +48,8 @@ void setup(){
   //  star = loadShape("s1.svg");
   
     //viberation TODO
-    // String portName = Serial.list()[3]; // replace this number with the port you are using
-    // port = new Serial(this, portName, 9600);
+     String portName = Serial.list()[3]; // replace this number with the port you are using
+     port = new Serial(this, portName, 9600);
 
     //bg = loadImage("bg.jpg");
     background(255);
@@ -59,12 +65,12 @@ void draw() {
     
   else{
     //background stars
-    float star_alpha = random(50,80);
-    float ra = random(10, 30);
-    fill(135,105,46,star_alpha);
-    stroke(135,105,46, star_alpha/5);
+    float star_alpha = random(10,50);
+    float ra = random(10, 20);
+    fill(252,249,237,star_alpha);
+    stroke(252,249,237, star_alpha/5);
     strokeWeight(ra/5);
-    if(frameCount % 10 == 0){
+    if(frameCount % 30 == 0){
       ellipse(random(width),random(height), ra, ra);
     }
    
@@ -73,9 +79,9 @@ void draw() {
     
     //moving circles
     if(x>0 && y>0){
-      fill(200,200,200,40);
+      fill(255,255,255,40);
       noStroke();
-      ellipse(x,y,20,20);
+      ellipse(x,y,30,30);
     }
     
     pushStyle();
@@ -83,7 +89,7 @@ void draw() {
       Circle noteCircle=noteCircles[i];
       //filling of the 7 circles -- when browsing
       fill(255,255,255,noteCircle.alpha);
-      stroke(135,105,46, frameCount % 50);
+      stroke(255,186,91, frameCount % 30);
       strokeWeight(10);
       ellipse(noteCircle.x, noteCircle.y, 3*noteCircle.width, 3*noteCircle.height);
     }
@@ -97,6 +103,57 @@ void draw() {
     }
     popStyle();
   }
+  
+  if (0 < port.available()) {         // If data is available,
+            button = port.read();            // read it and store it in val
+           
+          }
+      
+      //browse all the note options
+    if(button == 12 || button == 13 || button == 3 || button == 4){
+        for (int i=0; i<7; i++){
+          noteCircles[i].alpha=0 * 255;
+        }
+        
+       if(button == 12 || button == 13){
+          option++;
+          port.write(motor);
+          motor++;
+
+        }
+        if(button == 3 || button == 4){
+          option--;
+          port.write(motor);
+          motor--;
+        }
+        
+       if(option > 6 || option < 0 || motor > 11 || motor < 5){
+          option = 0;
+          motor = 5;
+        }
+        notes[option].play();
+        noteCircles[option].alpha = 1 * 255;
+       
+
+    }
+    
+
+    
+    if(button == 30 || button == 31){
+        if(option == -1) return;
+        melodyNotes.add(option); //put selected notes into melodynotes array
+        notes[melodyNotes.get(melodyNotes.size()-1)].play();  // play currently selected note
+        Circle circle=noteCircles[option];
+
+        //shapeMode(CENTER);       
+        //shape(star, circle.x, circle.y,36,36);
+
+        melodyNoteCircles.add(Circle.copy(circle)); 
+        port.write(melodyNotes.get(melodyNotes.size()-1)+5);
+         println(button);
+
+    }
+    
 }
 
 void keyPressed(){
@@ -105,7 +162,7 @@ void keyPressed(){
     nyuMode=false;
     fill(255);
     rect(0,0,width,height);
-    background(67, 97, 127, frameCount/50); //night
+    background(102, 92, 132, frameCount/50); //night
   }
     
     
@@ -184,7 +241,7 @@ void keyPressed(){
           while(playPointer < melodyNotes.size()) {
        
             notes[melodyNotes.get(playPointer)].play();
-           
+            port.write(melodyNotes.get(playPointer)+5);
             // sleep 0.5 sec before play the next note.
             try{
          
