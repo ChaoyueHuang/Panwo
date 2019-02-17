@@ -14,14 +14,20 @@ float x,y,diameter;
 ArrayList<Integer> melodyNotes; // array of notes
 ArrayList<Circle> melodyNoteCircles; 
 
+
 int option = -1; // note option from 1-7, for C-A
 int playPointer=0; // pointer for playing composed melody
 
 static int canvasWidth, canvasHeight;
+static final Random delayGenerator = new Random();
 
 Serial port;
 
+boolean nyuMode=true;
+
 void setup(){
+  
+    nyu();
     canvasWidth = 1200;
     canvasHeight = 675;
     size(1200, 675);
@@ -33,20 +39,25 @@ void setup(){
     smooth();
     noStroke();
     
-    star = loadShape("s1.svg");
+  //  star = loadShape("s1.svg");
   
     //viberation TODO
     // String portName = Serial.list()[3]; // replace this number with the port you are using
     // port = new Serial(this, portName, 9600);
 
     //bg = loadImage("bg.jpg");
-    fill(255);
-    rect(0,0,width,height);
-    background(67, 97, 127, frameCount/10); //night
+    background(255);
+    //background(67, 97, 127, frameCount/5); //night
+    //fill(255,255,255,2);
+    //rect(0,0,width,height);
 
 }
-int z=0;
+
 void draw() {
+  if (nyuMode)
+    display();
+    
+  else{
     //background stars
     float star_alpha = random(50,80);
     float ra = random(10, 30);
@@ -60,9 +71,14 @@ void draw() {
     //fill(255,255,255,0.1);
     //rect(0,0,width,height);
     
-    //fill(125,95,36,80);
-    //ellipse(x,y,40,40);
+    //moving circles
+    if(x>0 && y>0){
+      fill(200,200,200,40);
+      noStroke();
+      ellipse(x,y,20,20);
+    }
     
+    pushStyle();
     for (int i=0; i<7; i++){
       Circle noteCircle=noteCircles[i];
       //filling of the 7 circles -- when browsing
@@ -74,14 +90,24 @@ void draw() {
     
     for (int i=0; i<melodyNoteCircles.size(); i++){
       Circle noteCircle=melodyNoteCircles.get(i);
+      
       //fillinf of the selected circle -- after "enter"
       fill(0,0,0,noteCircle.alpha);
       ellipse(noteCircle.x, noteCircle.y, 5*noteCircle.width, 5*noteCircle.height);
     }
-
+    popStyle();
+  }
 }
 
 void keyPressed(){
+    
+  if(keyCode == 81){
+    nyuMode=false;
+    fill(255);
+    rect(0,0,width,height);
+    background(67, 97, 127, frameCount/50); //night
+  }
+    
     
     //browse all the note options
     if(keyCode == UP || keyCode == DOWN){
@@ -108,6 +134,7 @@ void keyPressed(){
 
     //confirm note selection
     if(keyCode == ENTER){
+        if(option == -1) return;
         melodyNotes.add(option); //put selected notes into melodynotes array
         notes[melodyNotes.get(melodyNotes.size()-1)].play();  // play currently selected note
         Circle circle=noteCircles[option];
@@ -116,25 +143,28 @@ void keyPressed(){
         //shape(star, circle.x, circle.y,36,36);
 
         melodyNoteCircles.add(Circle.copy(circle));    
+
     }
 
 
     // play molody notes
     if(keyCode == SHIFT){
+      if(melodyNoteCircles.isEmpty()) return;
       Circle initCircle=melodyNoteCircles.get(0);
       x=initCircle.x;
       y=initCircle.y;
       diameter = 5;
+      
+      //animation
       Ani.init(this);
       seq = new AniSequence(this);
       seq.beginSequence();
-
-      
       seq.add(Ani.to(this, 0.5 ,"diameter", 5));
       
       for(int i=1; i<melodyNoteCircles.size(); i++){
+
          String coo = "x:"+melodyNoteCircles.get(i).x+",y:"+melodyNoteCircles.get(i).y;
-         seq.add(Ani.to(this, delay/1000 ,coo)); 
+         seq.add(Ani.to(this, 1, coo)); //delay by seconds
       }
       
       seq.beginStep();
@@ -152,15 +182,13 @@ void keyPressed(){
       new Thread(new Runnable(){
         public void run(){
           while(playPointer < melodyNotes.size()) {
-            
-            final  Random rand=new Random(); 
-            delay = rand.nextInt(1000)+200;
+       
             notes[melodyNotes.get(playPointer)].play();
-            
-            
+           
             // sleep 0.5 sec before play the next note.
             try{
-              Thread.sleep((int)delay);
+         
+              Thread.sleep(1000);
             } catch (Exception e){
               e.printStackTrace();
             }
@@ -195,6 +223,7 @@ void initializeNotes(){
 void initializeMolodyNotes(){
     melodyNotes = new ArrayList<Integer>();
     melodyNoteCircles = new ArrayList<Circle>();
+
 }
 
 
